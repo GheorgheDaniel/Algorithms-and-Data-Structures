@@ -1,0 +1,115 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+const int MAX = 100000;
+int N, V[MAX + 3];
+int ans = 0;
+//https://kilonova.ro/problems/556
+struct SegTree{
+    private:
+        int aint[4 * MAX + 3];
+        int lazy[4 * MAX + 3];
+        void lazyupdate(int nod, int st, int dr) {
+            if(st < dr) {
+                aint[2 * nod] += lazy[nod];
+                aint[2 * nod + 1] += lazy[nod];
+                lazy[2 * nod] += lazy[nod];
+                lazy[2 * nod + 1] += lazy[nod];
+            }
+            lazy[nod] = 0;
+        }
+
+        void query1(int nod, int st, int dr, int le, int ri) {
+            lazyupdate(nod, st, dr);
+            if(le <= st && dr <= ri) {
+                ans = min(ans, aint[nod]);
+            }
+            else {
+                int mid = (st + dr) / 2;
+                if(le <= mid) {
+                    query1(2 * nod, st, mid, le, ri);
+                } 
+                if(ri > mid) {
+                    query1(2 * nod + 1, mid + 1, dr, le, ri);
+                }
+                aint[nod] = min(aint[2 * nod], aint[2 * nod + 1]);
+            }
+            
+        }
+    public: 
+        void build(int nod, int st, int dr) {
+            if(st == dr) {
+                aint[nod] = st;
+            }
+            else {
+                int mid = (st + dr) / 2;
+                build(2 * nod, st, mid);
+                build(2 * nod + 1, mid + 1, dr);
+
+                aint[nod] = min(aint[2 * nod], aint[2 * nod + 1]);
+            }
+        }
+
+        int query(int nod, int st, int dr, int le, int ri) {
+            ans = INT_MAX;
+            query1(nod, st, dr, le, ri);
+            return ans;
+        }
+
+        void update(int nod, int st, int dr, int le, int ri, int val) {
+            lazyupdate(nod, st, dr);
+            if(le <= st && dr <= ri) { 
+                aint[nod] += val;
+                lazy[nod] += val;
+            }
+            else {
+                int mid = (st + dr) / 2;
+                if(le <= mid) {
+                    update(2 * nod, st, mid, le, ri, val);
+                }
+                if(ri > mid) {
+                    update(2 * nod + 1, mid + 1, dr, le, ri, val);
+                }              
+                aint[nod] = min(aint[2 * nod], aint[2 * nod + 1]);
+            }
+            
+        }
+}A;
+
+int main() {
+    freopen("sirbun.in", "r", stdin);
+    freopen("sirbun.out", "w", stdout);
+
+    cin.tie(0);
+    cout.tie(0);
+    ios_base::sync_with_stdio(false);
+
+    cin >> N;
+    for(int i = 1; i <= N; i++) {
+        cin >> V[i];
+    }
+    A.build(1, 1, N);
+
+
+    long long ans = 0;
+    int j = 1;
+    for(int i = 1; i <= N; i++)  {
+        A.update(1, 1, N, V[i], N, -1);
+        
+        while(j < i && A.query(1, 1, N, 1, N) < 0) {
+            A.update(1, 1, N, V[j], N, 1);
+            j++;
+        }
+        ans += (i - j + 1);
+    }
+    cout << ans;
+}
+
+
+/*
+
+    -> Eu la un pas i trebuie sa verific daca toate elementele din interval au suma 
+    frecventelor <= i   
+
+
+*/
